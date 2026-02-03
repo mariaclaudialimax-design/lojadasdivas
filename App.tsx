@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect, Suspense } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
 import Header from './components/Header';
 import Hero from './components/Hero'; // Keep critical imports eager
 import ProductSelector from './components/ProductSelector';
@@ -24,6 +26,8 @@ const SearchOverlay = React.lazy(() => import('./components/SearchOverlay'));
 const InfoPage = React.lazy(() => import('./pages/InfoPage'));
 const ThankYouPage = React.lazy(() => import('./components/ThankYouPage'));
 const Admin = React.lazy(() => import('./pages/Admin'));
+const AdminLogin = React.lazy(() => import('./pages/AdminLogin'));
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 
 // --- ROUTING HELPER FUNCTION ---
 // Extracts state from URL synchronously to avoid "flashing" on load
@@ -210,27 +214,100 @@ const App: React.FC = () => {
   }
 
   return (
+    <AdminRouting
+      currentPage={currentPage}
+      handleNavigateHome={handleNavigateHome}
+      handleNavigateInfo={handleNavigateInfo}
+      handleNavigateThankYou={handleNavigateThankYou}
+      handleNavigateAdmin={() => navigateTo('/admin')}
+      currentProduct={currentProduct}
+      currentCategory={currentCategory}
+      currentInfoPage={currentInfoPage}
+      cartItems={cartItems}
+      isCartOpen={isCartOpen}
+      isSearchOpen={isSearchOpen}
+      setIsCartOpen={setIsCartOpen}
+      setIsSearchOpen={setIsSearchOpen}
+      handleProductClick={handleProductClick}
+      handleCategoryClick={handleCategoryClick}
+      handleAddToCart={handleAddToCart}
+      handleRemoveFromCart={handleRemoveFromCart}
+      handleHeaderLegalClick={handleHeaderLegalClick}
+      apiProducts={apiProducts}
+      selectorRef={selectorRef}
+    />
+  );
+};
+
+// === ADMIN ROUTING COMPONENT ===
+interface AdminRoutingProps {
+  currentPage: PageView;
+  handleNavigateHome: () => void;
+  handleNavigateInfo: (page: InfoPageType) => void;
+  handleNavigateThankYou: () => void;
+  handleNavigateAdmin: () => void;
+  currentProduct: Product | null;
+  currentCategory: string | null;
+  currentInfoPage: InfoPageType | null;
+  cartItems: CartItem[];
+  isCartOpen: boolean;
+  isSearchOpen: boolean;
+  setIsCartOpen: (open: boolean) => void;
+  setIsSearchOpen: (open: boolean) => void;
+  handleProductClick: (product: Product) => void;
+  handleCategoryClick: (categoryId: string) => void;
+  handleAddToCart: (size: Size, colors?: string[]) => void;
+  handleRemoveFromCart: (index: number) => void;
+  handleHeaderLegalClick: (page: LegalPage) => void;
+  apiProducts: Product[];
+  selectorRef: React.RefObject<HTMLDivElement>;
+}
+
+const AdminRouting: React.FC<AdminRoutingProps> = (props) => {
+  const { isAuthenticated } = useAuth();
+
+  // Admin Routes (no footer/header)
+  if (props.currentPage === 'admin' && !isAuthenticated) {
+    return (
+      <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <AdminLogin onLoginSuccess={() => props.handleNavigateAdmin()} />
+      </Suspense>
+    );
+  }
+
+  if (props.currentPage === 'admin' && isAuthenticated) {
+    return (
+      <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <PrivateRoute>
+          <AdminDashboard onNavigateHome={props.handleNavigateHome} />
+        </PrivateRoute>
+      </Suspense>
+    );
+  }
+
+  // Store Routes (with footer/header)
+  return (
     <div className="min-h-screen bg-[#FFFBFB] text-gray-900 font-sans pb-20 md:pb-0 selection:bg-rose-200 selection:text-rose-900 overflow-x-hidden w-full">
       
       {/* Search Overlay (Lazy) */}
       <Suspense fallback={null}>
-        {isSearchOpen && (
+        {props.isSearchOpen && (
             <SearchOverlay 
-                isOpen={isSearchOpen}
-                onClose={() => setIsSearchOpen(false)}
-                onProductClick={handleProductClick}
+                isOpen={props.isSearchOpen}
+                onClose={() => props.setIsSearchOpen(false)}
+                onProductClick={props.handleProductClick}
             />
         )}
       </Suspense>
 
       {/* Cart Drawer (Lazy) */}
       <Suspense fallback={null}>
-        {isCartOpen && (
+        {props.isCartOpen && (
             <CartDrawer 
-                isOpen={isCartOpen} 
-                onClose={() => setIsCartOpen(false)} 
-                cartItems={cartItems} 
-                onRemoveItem={handleRemoveFromCart}
+                isOpen={props.isCartOpen} 
+                onClose={() => props.setIsCartOpen(false)} 
+                cartItems={props.cartItems} 
+                onRemoveItem={props.handleRemoveFromCart}
             />
         )}
       </Suspense>
@@ -245,67 +322,67 @@ const App: React.FC = () => {
 
       {/* Header with Navigation */}
       <Header 
-        onOpenLegal={handleHeaderLegalClick} 
-        onNavigateHome={handleNavigateHome} 
-        onNavigateCategory={handleCategoryClick}
-        cartCount={cartItems.length}
-        onOpenCart={() => setIsCartOpen(true)}
-        onOpenSearch={() => setIsSearchOpen(true)}
+        onOpenLegal={props.handleHeaderLegalClick} 
+        onNavigateHome={props.handleNavigateHome} 
+        onNavigateCategory={props.handleCategoryClick}
+        cartCount={props.cartItems.length}
+        onOpenCart={() => props.setIsCartOpen(true)}
+        onOpenSearch={() => props.setIsSearchOpen(true)}
       />
 
       {/* === HOMEPAGE === */}
-      {currentPage === 'home' && (
-        <Home products={apiProducts} onProductClick={handleProductClick} onCategoryClick={handleCategoryClick} />
+      {props.currentPage === 'home' && (
+        <Home products={props.apiProducts} onProductClick={props.handleProductClick} onCategoryClick={props.handleCategoryClick} />
       )}
 
       {/* === INFO / LEGAL PAGES === */}
-      {currentPage === 'info' && currentInfoPage && (
+      {props.currentPage === 'info' && props.currentInfoPage && (
           <div className="min-h-[60vh]">
              <div className="max-w-4xl mx-auto px-4 pt-8">
-                <button onClick={handleNavigateHome} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1 mb-4">
+                <button onClick={props.handleNavigateHome} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1 mb-4">
                     <ChevronLeft size={16} /> Voltar para Loja
                 </button>
              </div>
              <Suspense fallback={<div className="flex justify-center p-12"><Loader2 className="animate-spin text-gray-400"/></div>}>
-                <InfoPage type={currentInfoPage} />
+                <InfoPage type={props.currentInfoPage} />
              </Suspense>
           </div>
       )}
 
       {/* === THANK YOU PAGE === */}
-      {currentPage === 'thank_you' && (
+      {props.currentPage === 'thank_you' && (
           <Suspense fallback={<div className="flex justify-center p-12"><Loader2 className="animate-spin text-gray-400"/></div>}>
-            <ThankYouPage onNavigateHome={handleNavigateHome} />
+            <ThankYouPage onNavigateHome={props.handleNavigateHome} />
           </Suspense>
       )}
 
       {/* === CATEGORY PAGE === */}
-      {currentPage === 'category' && currentCategory && (
+      {props.currentPage === 'category' && props.currentCategory && (
          <div className="max-w-7xl mx-auto px-4 py-8 min-h-[60vh] animate-in fade-in slide-in-from-bottom-2">
             <div className="mb-6">
-                 <button onClick={handleNavigateHome} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1 mb-4">
+                 <button onClick={props.handleNavigateHome} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1 mb-4">
                     <ChevronLeft size={16} /> Voltar para Loja
                 </button>
                 <h1 className="text-3xl font-serif text-gray-900">
-                    {CATEGORIES.find(c => c.id === currentCategory)?.name}
+                    {CATEGORIES.find(c => c.id === props.currentCategory)?.name}
                 </h1>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8">
-                {apiProducts.filter(p => {
-                    if (currentCategory === 'kits') return p.isKit;
-                    if (currentCategory === 'conjuntos') return p.category === 'Conjuntos';
-                    if (currentCategory === 'vestidos') return p.category === 'Vestidos';
+                {props.apiProducts.filter(p => {
+                    if (props.currentCategory === 'kits') return p.isKit;
+                    if (props.currentCategory === 'conjuntos') return p.category === 'Conjuntos';
+                    if (props.currentCategory === 'vestidos') return p.category === 'Vestidos';
                     return false;
                 }).map(product => (
-                    <ProductCard key={product.id} product={product} onClick={handleProductClick} />
+                    <ProductCard key={product.id} product={product} onClick={props.handleProductClick} />
                 ))}
             </div>
             
-            {apiProducts.filter(p => {
-                 if (currentCategory === 'kits') return p.isKit;
-                 if (currentCategory === 'conjuntos') return p.category === 'Conjuntos';
-                 if (currentCategory === 'vestidos') return p.category === 'Vestidos';
+            {props.apiProducts.filter(p => {
+                 if (props.currentCategory === 'kits') return p.isKit;
+                 if (props.currentCategory === 'conjuntos') return p.category === 'Conjuntos';
+                 if (props.currentCategory === 'vestidos') return p.category === 'Vestidos';
                  return false;
             }).length === 0 && (
                 <div className="text-center py-20 text-gray-500">
@@ -316,11 +393,11 @@ const App: React.FC = () => {
       )}
 
       {/* === PRODUCT PAGE === */}
-      {currentPage === 'product' && currentProduct && (
+      {props.currentPage === 'product' && props.currentProduct && (
         <div className="animate-in fade-in duration-300">
             {/* Breadcrumb / Back */}
             <div className="px-4 py-4 max-w-7xl mx-auto">
-                <button onClick={handleNavigateHome} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1">
+                <button onClick={props.handleNavigateHome} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1">
                     <ChevronLeft size={16} /> Voltar para Loja
                 </button>
             </div>
@@ -330,7 +407,7 @@ const App: React.FC = () => {
                 
                 {/* LEFT COLUMN: IMAGES */}
                 <div className="md:col-span-7 w-full flex flex-col items-center">
-                    <ProductGallery images={currentProduct.images} title={currentProduct.title} />
+                    <ProductGallery images={props.currentProduct.images} title={props.currentProduct.title} />
                     
                     {/* Benefits shown below image on desktop */}
                     <div className="hidden md:block mt-8 w-full">
@@ -340,17 +417,17 @@ const App: React.FC = () => {
 
                 {/* RIGHT COLUMN: BUY BOX */}
                 <div className="md:col-span-5 w-full flex flex-col items-center">
-                    {currentProduct.isKit ? (
+                    {props.currentProduct.isKit ? (
                         <ProductSelector 
-                            product={currentProduct}
+                            product={props.currentProduct}
                             onSelectionComplete={() => {}} 
-                            onAddToCart={handleAddToCart}
+                            onAddToCart={props.handleAddToCart}
                             id="main-selector" 
                         />
                     ) : (
                         <StandardProductSelector 
-                            product={currentProduct}
-                            onAddToCart={(size) => handleAddToCart(size)}
+                            product={props.currentProduct}
+                            onAddToCart={(size) => props.handleAddToCart(size)}
                         />
                     )}
                     
@@ -364,8 +441,8 @@ const App: React.FC = () => {
             {/* SECTIONS BELOW FOLD */}
             
             <div className="mt-12 border-t border-gray-100 pt-12">
-                 <SocialProof product={currentProduct} /> 
-                 {currentProduct.isKit && <Usage />} 
+                 <SocialProof product={props.currentProduct} /> 
+                 {props.currentProduct.isKit && <Usage />} 
             </div>
             
             {/* Urgency Section (Common) */}
@@ -383,19 +460,26 @@ const App: React.FC = () => {
 
             {/* Related Products */}
             <RelatedProducts 
-                currentProduct={currentProduct}
-                onProductClick={handleProductClick}
+                currentProduct={props.currentProduct}
+                onProductClick={props.handleProductClick}
             />
         </div>
       )}
 
       {/* Footer */}
       <Footer 
-        onNavigateInfo={handleNavigateInfo}
-        onNavigateAdmin={handleNavigateAdmin} 
+        onNavigateInfo={props.handleNavigateInfo}
+        onNavigateAdmin={() => props.handleNavigateAdmin()} 
       />
     </div>
   );
 };
+};
 
-export default App;
+export default function AppWithAuth() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
+}

@@ -1,5 +1,8 @@
 
 export type Size = 'PPP' | 'PP' | 'P' | 'M' | 'G' | 'GG' | '3G' | '4G' | '5G';
+export type PageView = 'home' | 'product' | 'category' | 'info' | 'thank_you' | 'admin' | 'admin_login';
+export type InfoPageType = 'sobre' | 'trocas' | 'politica' | 'termos' | 'faq';
+export type AdminView = 'login' | 'dashboard' | 'products' | 'categories' | 'home' | 'pages' | 'orders' | 'settings';
 
 export interface ColorOption {
   id: string;
@@ -17,26 +20,33 @@ export interface ProductVariant {
 
 export interface Product {
   id: string;
-  externalId?: string; // ID específico para integração com checkout/tracking (ex: ID da Yampi/Cartpanda)
+  externalId?: string;
   handle: string;
   title: string;
   description: string;
-  category: string;
+  category?: string;
+  categoryId?: string;
   price: number;
-  oldPrice: number;
+  oldPrice?: number;
+  compareAtPrice?: number;
+  sku?: string;
+  stock?: number;
   images: string[];
-  sizes: Size[];
-  installments: string;
-  isKit: boolean; // True for the Ibiza Kit special logic
-  checkoutUrl?: string; // Optional direct checkout URL
-  variantUrls?: Record<string, string>; // Maps Size to Checkout URL
-  active?: boolean; // New: for admin control
+  sizes?: Size[];
+  installments?: string;
+  isKit?: boolean;
+  checkoutUrl?: string;
+  variantUrls?: Record<string, string>;
+  active?: boolean;
+  status?: 'active' | 'draft';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CartItem {
   product: Product;
   size: Size;
-  colors?: string[]; // Only for kits
+  colors?: string[];
   quantity: number;
 }
 
@@ -47,6 +57,47 @@ export interface Review {
   text: string;
   timeAgo: string;
   verified: boolean;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  imageUrl?: string;
+  orderPosition: number;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Page {
+  id: string;
+  slug: string;
+  title: string;
+  content: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  isPublished: boolean;
+  publishedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Order {
+  id: string;
+  externalId?: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  totalPrice: number;
+  status: 'pending' | 'paid' | 'shipped' | 'refunded' | 'canceled';
+  items: any[];
+  trackingCode?: string;
+  eventId?: string;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface FAQItem {
