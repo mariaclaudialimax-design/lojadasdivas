@@ -14,6 +14,7 @@ import RelatedProducts from './components/RelatedProducts';
 import { ArrowDown, MapPin, ChevronLeft, Loader2 } from 'lucide-react';
 import { Size, LegalPage, PageView, Product, InfoPageType, CartItem } from './types';
 import { PRODUCTS, CATEGORIES } from './data/products';
+import { useProducts } from './hooks/useProducts';
 import ProductCard from './components/ProductCard';
 import { AVAILABLE_COLORS } from './constants'; 
 
@@ -26,7 +27,7 @@ const Admin = React.lazy(() => import('./pages/Admin'));
 
 // --- ROUTING HELPER FUNCTION ---
 // Extracts state from URL synchronously to avoid "flashing" on load
-const getInitialStateFromUrl = () => {
+const getInitialStateFromUrl = (products: Product[] = PRODUCTS) => {
     let path = window.location.pathname;
     
     // Normalize path: remove trailing slash if not root
@@ -47,7 +48,7 @@ const getInitialStateFromUrl = () => {
     } 
     else if (path.startsWith('/product/')) {
         const handle = path.split('/product/')[1];
-        const product = PRODUCTS.find(p => p.handle === handle);
+        const product = products.find(p => p.handle === handle);
         if (product) {
             state.page = 'product';
             state.product = product;
@@ -84,6 +85,9 @@ const getInitialStateFromUrl = () => {
 const App: React.FC = () => {
   const selectorRef = useRef<HTMLDivElement>(null);
   
+  // --- FETCH PRODUCTS FROM API ---
+  const { products: apiProducts, loading: productsLoading, error: productsError } = useProducts();
+  
   // --- STATE MANAGEMENT ---
 
   // Cart State with LocalStorage Persistence
@@ -106,7 +110,8 @@ const App: React.FC = () => {
 
   // --- NAVIGATION STATE INITIALIZATION ---
   // We initialize state using the helper function so the FIRST render matches the URL.
-  const initialState = getInitialStateFromUrl();
+  // Use apiProducts if loaded, otherwise fallback to static PRODUCTS
+  const initialState = getInitialStateFromUrl(apiProducts.length > 0 ? apiProducts : PRODUCTS);
 
   const [currentPage, setCurrentPage] = useState<PageView>(initialState.page);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(initialState.product);
@@ -115,14 +120,11 @@ const App: React.FC = () => {
 
   // Update state based on URL (for PopState/Back button)
   const updateStateFromUrl = () => {
-      const newState = getInitialStateFromUrl();
+      const newState = getInitialStateFromUrl(apiProducts.length > 0 ? apiProducts : PRODUCTS);
       setCurrentPage(newState.page);
       setCurrentProduct(newState.product);
       setCurrentCategory(newState.category);
       setCurrentInfoPage(newState.infoPage);
-      
-      // If we are effectively at home but url is weird (404 handling logic moved here if needed)
-      // But getInitialStateFromUrl handles the fallback to home data.
   };
 
   // Handle Browser Back/Forward buttons
@@ -253,7 +255,7 @@ const App: React.FC = () => {
 
       {/* === HOMEPAGE === */}
       {currentPage === 'home' && (
-        <Home onProductClick={handleProductClick} onCategoryClick={handleCategoryClick} />
+        <Home products={apiProducts} onProductClick={handleProductClick} onCategoryClick={handleCategoryClick} />
       )}
 
       {/* === INFO / LEGAL PAGES === */}
@@ -290,7 +292,7 @@ const App: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8">
-                {PRODUCTS.filter(p => {
+                {apiProducts.filter(p => {
                     if (currentCategory === 'kits') return p.isKit;
                     if (currentCategory === 'conjuntos') return p.category === 'Conjuntos';
                     if (currentCategory === 'vestidos') return p.category === 'Vestidos';
@@ -300,7 +302,7 @@ const App: React.FC = () => {
                 ))}
             </div>
             
-            {PRODUCTS.filter(p => {
+            {apiProducts.filter(p => {
                  if (currentCategory === 'kits') return p.isKit;
                  if (currentCategory === 'conjuntos') return p.category === 'Conjuntos';
                  if (currentCategory === 'vestidos') return p.category === 'Vestidos';

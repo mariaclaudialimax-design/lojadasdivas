@@ -5,11 +5,12 @@ import ProductCard from '../components/ProductCard';
 import { ArrowRight, Star } from 'lucide-react';
 
 interface HomeProps {
+  products?: Product[];
   onProductClick: (product: Product) => void;
   onCategoryClick: (categoryId: string) => void;
 }
 
-const Home: React.FC<HomeProps> = ({ onProductClick, onCategoryClick }) => {
+const Home: React.FC<HomeProps> = ({ products = PRODUCTS, onProductClick, onCategoryClick }) => {
   return (
     <div className="pb-12">
       {/* Main Hero Banner - Responsive */}
@@ -20,7 +21,7 @@ const Home: React.FC<HomeProps> = ({ onProductClick, onCategoryClick }) => {
           alt="Nova Coleção Ibiza" 
           className="w-full h-auto object-cover md:hidden min-h-[500px]"
           onClick={() => {
-             const kit = PRODUCTS.find(p => p.isKit);
+             const kit = products.find(p => p.isKit);
              if (kit) onProductClick(kit);
           }}
         />
@@ -31,7 +32,7 @@ const Home: React.FC<HomeProps> = ({ onProductClick, onCategoryClick }) => {
           alt="Nova Coleção Ibiza Desktop" 
           className="hidden md:block w-full h-auto object-cover"
           onClick={() => {
-             const kit = PRODUCTS.find(p => p.isKit);
+             const kit = products.find(p => p.isKit);
              if (kit) onProductClick(kit);
           }}
         />
@@ -52,7 +53,7 @@ const Home: React.FC<HomeProps> = ({ onProductClick, onCategoryClick }) => {
                     <button 
                         className="bg-white text-gray-900 font-bold py-3 px-8 rounded-full hover:bg-rose-50 transition-colors inline-flex items-center gap-2 shadow-xl"
                         onClick={() => {
-                            const kit = PRODUCTS.find(p => p.isKit);
+                            const kit = products.find(p => p.isKit);
                             if (kit) onProductClick(kit);
                         }}
                     >
@@ -93,7 +94,7 @@ const Home: React.FC<HomeProps> = ({ onProductClick, onCategoryClick }) => {
             <div 
                 className="relative aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden shadow-xl cursor-pointer"
                 onClick={() => {
-                    const kit = PRODUCTS.find(p => p.isKit);
+                    const kit = products.find(p => p.isKit);
                     if (kit) onProductClick(kit);
                 }}
             >
@@ -114,7 +115,7 @@ const Home: React.FC<HomeProps> = ({ onProductClick, onCategoryClick }) => {
                 </ul>
                 <button 
                     onClick={() => {
-                        const kit = PRODUCTS.find(p => p.isKit);
+                        const kit = products.find(p => p.isKit);
                         if (kit) onProductClick(kit);
                     }}
                     className="bg-green-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-green-700 transition-all w-full md:w-auto"
@@ -135,7 +136,7 @@ const Home: React.FC<HomeProps> = ({ onProductClick, onCategoryClick }) => {
          </div>
          
          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8">
-            {PRODUCTS.filter(p => !p.isKit).map(product => (
+            {products.filter(p => !p.isKit).map(product => (
                 <ProductCard key={product.id} product={product} onClick={onProductClick} />
             ))}
          </div>
