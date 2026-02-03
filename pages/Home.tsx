@@ -17,6 +17,8 @@ const Home: React.FC<HomeProps> = ({ products = PRODUCTS, onProductClick, onCate
     const { sections, loading: sectionsLoading } = useHomeSections();
     const { categories: apiCategories, loading: catsLoading } = useCategories();
 
+    const displayProducts = products.length > 0 ? products : PRODUCTS;
+
     const categories = apiCategories.length > 0 ? apiCategories : FALLBACK_CATEGORIES.map(c => ({
         id: c.id,
         name: c.name,
@@ -26,8 +28,13 @@ const Home: React.FC<HomeProps> = ({ products = PRODUCTS, onProductClick, onCate
         orderPosition: 0
     }));
 
-    if (sectionsLoading || catsLoading) {
-        return <div className="h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-rose-500" /></div>;
+    if ((sectionsLoading || catsLoading) && sections.length === 0) {
+        return (
+            <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
+                <Loader2 className="animate-spin text-rose-500 w-10 h-10" />
+                <p className="text-gray-400 text-sm animate-pulse">Carregando sua vitrine...</p>
+            </div>
+        );
     }
 
     return (
@@ -36,7 +43,7 @@ const Home: React.FC<HomeProps> = ({ products = PRODUCTS, onProductClick, onCate
             {sections.length > 0 ? (
                 sections.map((section) => (
                     <div key={section.id}>
-                        {section.section_type === 'banner' && (
+                        {section.section_type === 'banner' && section.data && (
                             <section
                                 className="relative w-full cursor-pointer group overflow-hidden"
                                 onClick={() => {
@@ -45,7 +52,7 @@ const Home: React.FC<HomeProps> = ({ products = PRODUCTS, onProductClick, onCate
                                         // For now, if it's a product handle, we could find it
                                         if (section.data.link.includes('/product/')) {
                                             const handle = section.data.link.split('/product/')[1];
-                                            const p = products.find(p => p.handle === handle);
+                                            const p = displayProducts.find(p => p.handle === handle);
                                             if (p) onProductClick(p);
                                         } else if (section.data.link.includes('/category/')) {
                                             const catId = section.data.link.split('/category/')[1];
@@ -80,12 +87,12 @@ const Home: React.FC<HomeProps> = ({ products = PRODUCTS, onProductClick, onCate
                             </section>
                         )}
 
-                        {section.section_type === 'grid' && (
+                        {section.section_type === 'grid' && section.data && (
                             <section className="py-12 px-4 max-w-7xl mx-auto">
                                 <h2 className="text-2xl font-bold text-gray-900 mb-8">{section.title}</h2>
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                    {products
-                                        .filter(p => !section.data.category || p.category === section.data.category || p.categoryId === section.data.category)
+                                    {displayProducts
+                                        .filter(p => !section.data.category || section.data.category === 'all' || p.category === section.data.category || p.categoryId === section.data.category)
                                         .slice(0, section.data.limit || 4)
                                         .map(product => (
                                             <ProductCard key={product.id} product={product} onClick={onProductClick} />
@@ -99,8 +106,8 @@ const Home: React.FC<HomeProps> = ({ products = PRODUCTS, onProductClick, onCate
                 /* Fallback Static Content (Original Layout) */
                 <>
                     <section className="relative w-full cursor-pointer group overflow-hidden">
-                        <img src="https://cdn.shopify.com/s/files/1/0809/1274/4673/files/heronew.png?v=1770054480" className="w-full h-auto object-cover md:hidden min-h-[500px]" onClick={() => onProductClick(products[0])} />
-                        <img src="https://cdn.shopify.com/s/files/1/0773/0148/1696/files/bannerdesktopibiza-698133c8acf7c.webp?v=1770075089" className="hidden md:block w-full h-auto object-cover" onClick={() => onProductClick(products[0])} />
+                        <img src="https://cdn.shopify.com/s/files/1/0809/1274/4673/files/heronew.png?v=1770054480" className="w-full h-auto object-cover md:hidden min-h-[500px]" onClick={() => onProductClick(displayProducts[0])} />
+                        <img src="https://cdn.shopify.com/s/files/1/0773/0148/1696/files/bannerdesktopibiza-698133c8acf7c.webp?v=1770075089" className="hidden md:block w-full h-auto object-cover" onClick={() => onProductClick(displayProducts[0])} />
                     </section>
 
                     <section className="py-10 px-4">
@@ -122,7 +129,7 @@ const Home: React.FC<HomeProps> = ({ products = PRODUCTS, onProductClick, onCate
                     <section className="py-12 px-4 max-w-7xl mx-auto">
                         <h2 className="text-2xl font-bold text-gray-900 mb-8">Destaques</h2>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8">
-                            {products.slice(0, 8).map(product => (
+                            {displayProducts.slice(0, 8).map(product => (
                                 <ProductCard key={product.id} product={product} onClick={onProductClick} />
                             ))}
                         </div>

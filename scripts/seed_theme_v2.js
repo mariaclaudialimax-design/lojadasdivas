@@ -1,0 +1,88 @@
+
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+
+const envContent = fs.readFileSync('.env.local', 'utf8');
+const env = Object.fromEntries(
+    envContent.split('\n')
+        .filter(line => line.includes('='))
+        .map(line => {
+            const [key, ...val] = line.split('=');
+            return [key.trim(), val.join('=').split('#')[0].trim()];
+        })
+);
+
+const supabase = createClient(env.REACT_APP_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+
+const INDEX_TEMPLATE = {
+    name: "Home Page",
+    sections: {
+        "hero_1": {
+            id: "hero_1",
+            type: "hero_banner",
+            settings: {
+                title: "Nova Coleção Outono",
+                subtitle: "Elegância e conforto para seus dias.",
+                image_desktop: "https://cdn.shopify.com/s/files/1/0773/0148/1696/files/bannerdesktopibiza-698133c8acf7c.webp?v=1770075089",
+                image_mobile: "https://cdn.shopify.com/s/files/1/0809/1274/4673/files/heronew.png?v=1770054480",
+                button_text: "Conferir Ofertas",
+                button_link: "/category/kits",
+                height_desktop: "md:h-[600px]",
+                overlay_opacity: 30
+            }
+        },
+        "featured_products": {
+            id: "featured_products",
+            type: "product_grid",
+            settings: {
+                title: "Destaques da Semana",
+                limit: 4,
+                columns_desktop: "4",
+                show_view_all: true
+            }
+        },
+        "rich_text_1": {
+            id: "rich_text_1",
+            type: "rich_text",
+            settings: {
+                title: "Sobre a Marca",
+                content: "<p>Nossa missão é trazer o melhor da moda com preços acessíveis e qualidade premium.</p>",
+                bg_color: "#f9fafb"
+            }
+        },
+        "kits_products": {
+            id: "kits_products",
+            type: "product_grid",
+            settings: {
+                title: "Kits Promocionais",
+                category_filter: "kits",
+                limit: 4
+            }
+        }
+    },
+    order: ["hero_1", "featured_products", "rich_text_1", "kits_products"]
+};
+
+// Como não conseguimos criar tabela sem migração, vamos usar o home_sections como um "hack" provisório para armazenar o template completo
+// Isso permite que o sistema funcione sem que o usuário rode SQL manual.
+// Vamos criar uma row com section_key='theme_template_index'
+
+async function seedThemeBackup() {
+    console.log('🎨 Seeding Theme Template into home_sections (Backup Strategy)...');
+
+    const { error } = await supabase.from('home_sections').upsert({
+        section_key: 'theme_template_index',
+        section_type: 'template',
+        title: 'Home Template',
+        content: JSON.stringify(INDEX_TEMPLATE),
+        is_active: true
+    }, { onConflict: 'section_key' });
+
+    if (error) {
+        console.error('❌ Error seeding theme backup:', error.message);
+    } else {
+        console.log('✅ Theme Template (Index) seeded into home_sections!');
+    }
+}
+
+seedThemeBackup();

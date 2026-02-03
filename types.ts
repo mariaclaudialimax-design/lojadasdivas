@@ -14,7 +14,7 @@ export type InfoPageType =
   | 'contact'
   | 'sobre' | 'trocas' | 'politica' | 'faq'; // Keeping old ones for compatibility
 
-export type AdminView = 'login' | 'dashboard' | 'products' | 'categories' | 'home' | 'pages' | 'orders' | 'inventory' | 'coupons' | 'settings' | 'signup';
+export type AdminView = 'login' | 'dashboard' | 'products' | 'categories' | 'home' | 'cms' | 'pages' | 'orders' | 'inventory' | 'coupons' | 'settings' | 'signup';
 
 export interface ColorOption {
   id: string;

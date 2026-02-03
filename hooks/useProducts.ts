@@ -12,13 +12,13 @@ export const useProducts = () => {
       try {
         setLoading(true);
         const response = await fetch('/.netlify/functions/products');
-        
+
         if (!response.ok) {
           throw new Error(`API Error: ${response.status}`);
         }
 
         const data = await response.json();
-        
+
         // Map database fields to Product interface (snake_case to camelCase)
         const mappedProducts = Array.isArray(data) ? data.map((p: any) => ({
           id: p.id,
@@ -27,7 +27,7 @@ export const useProducts = () => {
           description: p.description,
           category: p.category,
           price: p.price,
-          oldPrice: p.old_price || p.oldPrice,
+          oldPrice: p.compare_at_price || p.old_price || p.oldPrice,
           images: p.images,
           sizes: p.sizes,
           installments: p.installments,

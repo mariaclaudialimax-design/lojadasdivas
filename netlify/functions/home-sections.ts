@@ -1,3 +1,4 @@
+
 import { Handler } from '@netlify/functions';
 import { createClient } from '@supabase/supabase-js';
 
@@ -14,12 +15,12 @@ const handler: Handler = async (event, context) => {
   }
 
   try {
-    // GET: Fetch home page sections (public - show active only)
+    // GET: Fetch home page sections (public)
     if (event.httpMethod === 'GET') {
       const { data, error } = await supabase
         .from('home_sections')
         .select('*')
-        .eq('active', true)
+        .eq('is_active', true)
         .order('order_position', { ascending: true });
 
       if (error) {
@@ -29,81 +30,52 @@ const handler: Handler = async (event, context) => {
         };
       }
 
+      // Map DB fields to Frontend expected fields (content -> data, is_active -> active)
+      const mappedData = data.map((item: any) => ({
+        ...item,
+        active: item.is_active,
+        data: typeof item.content === 'string' ? JSON.parse(item.content) : item.content
+      }));
+
       return {
         statusCode: 200,
-        body: JSON.stringify(data),
+        body: JSON.stringify(mappedData),
       };
     }
 
-    // PUT: Update home sections (admin only - batch update)
+    // PUT: Update home sections (admin only)
     if (event.httpMethod === 'PUT') {
       const token = event.headers.authorization?.split('Bearer ')[1];
-      
-      if (!token) {
-        return {
-          statusCode: 401,
-          body: JSON.stringify({ error: 'Unauthorized' }),
-        };
-      }
+      if (!token) return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) };
 
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      
-      if (authError || !user?.email) {
-        return {
-          statusCode: 401,
-          body: JSON.stringify({ error: 'Invalid token' }),
-        };
-      }
-
-      const { data: adminUser } = await supabase
-        .from('admin_users')
-        .select('role')
-        .eq('email', user.email)
-        .single();
-
-      if (!adminUser || adminUser.role !== 'admin') {
-        return {
-          statusCode: 403,
-          body: JSON.stringify({ error: 'Forbidden' }),
-        };
-      }
+      if (authError || !user?.email) return { statusCode: 401, body: JSON.stringify({ error: 'Invalid token' }) };
 
       const body = JSON.parse(event.body || '{}');
       const sectionId = event.queryStringParameters?.id;
 
-      if (!sectionId) {
-        return {
-          statusCode: 400,
-          body: JSON.stringify({ error: 'Missing section ID' }),
-        };
-      }
+      if (!sectionId) return { statusCode: 400, body: JSON.stringify({ error: 'Missing section ID' }) };
 
-      const { title, subtitle, imageUrl, content, active, orderPosition } = body;
+      const { title, description, data, active, orderPosition } = body;
 
-      const { data, error } = await supabase
+      const { data: updated, error } = await supabase
         .from('home_sections')
         .update({
           title: title !== undefined ? title : undefined,
-          subtitle: subtitle !== undefined ? subtitle : undefined,
-          image_url: imageUrl !== undefined ? imageUrl : undefined,
-          content: content !== undefined ? content : undefined,
-          active: active !== undefined ? active : undefined,
+          description: description !== undefined ? description : undefined,
+          content: data !== undefined ? JSON.stringify(data) : undefined,
+          is_active: active !== undefined ? active : undefined,
           order_position: orderPosition !== undefined ? orderPosition : undefined,
           updated_at: new Date().toISOString(),
         })
         .eq('id', sectionId)
         .select();
 
-      if (error) {
-        return {
-          statusCode: 400,
-          body: JSON.stringify({ error: error.message }),
-        };
-      }
+      if (error) return { statusCode: 400, body: JSON.stringify({ error: error.message }) };
 
       return {
         statusCode: 200,
-        body: JSON.stringify(data[0]),
+        body: JSON.stringify(updated[0]),
       };
     }
   } catch (error: any) {
