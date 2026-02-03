@@ -474,7 +474,6 @@ const AdminRouting: React.FC<AdminRoutingProps> = (props) => {
     </div>
   );
 };
-};
 
 export default function AppWithAuth() {
   return (
