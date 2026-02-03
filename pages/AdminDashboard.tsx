@@ -1,28 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut, LayoutGrid, Package, Layers, FileText, Home, Settings } from 'lucide-react';
+import AdminProductsPage from './AdminProductsPage';
+import AdminCategoriesPage from './AdminCategoriesPage';
+import AdminPagesPage from './AdminPagesPage';
 
 interface AdminDashboardProps {
-  onNavigateAdmin?: (section: string) => void;
-  onLogout?: () => void;
+  onNavigateHome: () => void;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateAdmin, onLogout }) => {
+type AdminView = 'dashboard' | 'products' | 'categories' | 'home' | 'pages' | 'orders' | 'settings';
+
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateHome }) => {
   const { user, logout } = useAuth();
+  const [currentView, setCurrentView] = useState<AdminView>('dashboard');
 
   const handleLogout = async () => {
     await logout();
-    onLogout?.();
+    onNavigateHome();
   };
 
   const menuItems = [
-    { icon: LayoutGrid, label: 'Dashboard', id: 'dashboard' },
-    { icon: Package, label: 'Produtos', id: 'products' },
-    { icon: Layers, label: 'Categorias', id: 'categories' },
-    { icon: Home, label: 'Home (CMS)', id: 'home' },
-    { icon: FileText, label: 'Páginas', id: 'pages' },
-    { icon: LayoutGrid, label: 'Pedidos', id: 'orders' },
-    { icon: Settings, label: 'Configurações', id: 'settings' }
+    { icon: LayoutGrid, label: 'Dashboard', id: 'dashboard' as const },
+    { icon: Package, label: 'Produtos', id: 'products' as const },
+    { icon: Layers, label: 'Categorias', id: 'categories' as const },
+    { icon: Home, label: 'Home (CMS)', id: 'home' as const },
+    { icon: FileText, label: 'Páginas', id: 'pages' as const },
+    { icon: LayoutGrid, label: 'Pedidos', id: 'orders' as const },
+    { icon: Settings, label: 'Configurações', id: 'settings' as const }
   ];
 
   return (
@@ -44,16 +49,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateAdmin, onLogo
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => onNavigateAdmin?.(item.id)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition text-left text-gray-300 hover:text-white"
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-sm font-medium">{item.label}</span>
-            </button>
-          ))}
+          {menuItems.map((item) => {
+            const isActive = currentView === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setCurrentView(item.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-left text-sm font-medium ${
+                  isActive
+                    ? 'bg-rose-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </nav>
 
         {/* Footer */}
@@ -74,50 +86,91 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateAdmin, onLogo
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        <div className="p-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h2>
-          <p className="text-gray-600 mb-8">Bem-vindo ao painel de administração</p>
+        {currentView === 'dashboard' && (
+          <div className="p-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h2>
+            <p className="text-gray-600 mb-8">Bem-vindo ao painel de administração</p>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            {[
-              { label: 'Produtos', value: '0', color: 'bg-blue-100 text-blue-600' },
-              { label: 'Categorias', value: '0', color: 'bg-green-100 text-green-600' },
-              { label: 'Pedidos', value: '0', color: 'bg-purple-100 text-purple-600' },
-              { label: 'Páginas', value: '0', color: 'bg-yellow-100 text-yellow-600' }
-            ].map((stat, idx) => (
-              <div key={idx} className="bg-white rounded-lg shadow p-6">
-                <p className="text-gray-600 text-sm mb-2">{stat.label}</p>
-                <p className={`text-3xl font-bold ${stat.color.split(' ')[1]}`}>
-                  {stat.value}
-                </p>
-              </div>
-            ))}
-          </div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+              {[
+                { label: 'Produtos', value: '0', color: 'bg-blue-100 text-blue-600' },
+                { label: 'Categorias', value: '0', color: 'bg-green-100 text-green-600' },
+                { label: 'Pedidos', value: '0', color: 'bg-purple-100 text-purple-600' },
+                { label: 'Páginas', value: '0', color: 'bg-yellow-100 text-yellow-600' }
+              ].map((stat, idx) => (
+                <div key={idx} className="bg-white rounded-lg shadow p-6">
+                  <p className="text-gray-600 text-sm mb-2">{stat.label}</p>
+                  <p className={`text-3xl font-bold ${stat.color.split(' ')[1]}`}>
+                    {stat.value}
+                  </p>
+                </div>
+              ))}
+            </div>
 
-          {/* Quick Start */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="font-bold text-gray-900 mb-4">🚀 Próximos Passos</h3>
-            <ul className="space-y-2 text-gray-700 text-sm">
-              <li className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-rose-600 rounded-full"></span>
-                Criar primeiro produto
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-rose-600 rounded-full"></span>
-                Configurar categorias
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-rose-600 rounded-full"></span>
-                Personalizar home
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-rose-600 rounded-full"></span>
-                Adicionar páginas estáticas
-              </li>
-            </ul>
+            {/* Quick Start */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="font-bold text-gray-900 mb-4">🚀 Próximos Passos</h3>
+              <ul className="space-y-2 text-gray-700 text-sm">
+                <li className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-rose-600 rounded-full"></span>
+                  Criar primeiro produto
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-rose-600 rounded-full"></span>
+                  Configurar categorias
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-rose-600 rounded-full"></span>
+                  Personalizar home
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-rose-600 rounded-full"></span>
+                  Adicionar páginas estáticas
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
+        )}
+
+        {currentView === 'products' && (
+          <AdminProductsPage onNavigateHome={onNavigateHome} />
+        )}
+
+        {currentView === 'categories' && (
+          <AdminCategoriesPage onNavigateHome={onNavigateHome} />
+        )}
+
+        {currentView === 'pages' && (
+          <AdminPagesPage onNavigateHome={onNavigateHome} />
+        )}
+
+        {currentView === 'home' && (
+          <div className="p-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Home (CMS)</h2>
+            <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+              Módulo de home em desenvolvimento...
+            </div>
+          </div>
+        )}
+
+        {currentView === 'orders' && (
+          <div className="p-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Pedidos</h2>
+            <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+              Módulo de pedidos em desenvolvimento...
+            </div>
+          </div>
+        )}
+
+        {currentView === 'settings' && (
+          <div className="p-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Configurações</h2>
+            <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+              Módulo de configurações em desenvolvimento...
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
