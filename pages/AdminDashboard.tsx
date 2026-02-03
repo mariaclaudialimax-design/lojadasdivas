@@ -4,6 +4,7 @@ import { LogOut, LayoutGrid, Package, Layers, FileText, Home, Settings } from 'l
 import AdminProductsPage from './AdminProductsPage';
 import AdminCategoriesPage from './AdminCategoriesPage';
 import AdminPagesPage from './AdminPagesPage';
+import AdminOrdersPage from './AdminOrdersPage';
 
 interface AdminDashboardProps {
   onNavigateHome: () => void;
@@ -155,12 +156,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateHome }) => {
         )}
 
         {currentView === 'orders' && (
-          <div className="p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Pedidos</h2>
-            <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-              Módulo de pedidos em desenvolvimento...
-            </div>
-          </div>
+          <AdminOrdersPage onNavigateHome={onNavigateHome} />
         )}
 
         {currentView === 'settings' && (
