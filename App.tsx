@@ -135,6 +135,11 @@ const App: React.FC = () => {
     setCurrentInfoPage(newState.infoPage);
   };
 
+  // Re-run URL matching when products finish loading from API
+  useEffect(() => {
+    updateStateFromUrl();
+  }, [apiProducts]);
+
   // Handle Browser Back/Forward buttons
   useEffect(() => {
     const handlePopState = () => {

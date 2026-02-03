@@ -7,7 +7,7 @@
 
 -- 1. CATEGORIES TABLE
 create table if not exists public.categories (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   name text not null unique,
   slug text not null unique,
   description text,
@@ -20,7 +20,7 @@ create table if not exists public.categories (
 
 -- 2. PAGES (CMS)
 create table if not exists public.pages (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   slug text unique not null,
   title text not null,
   content text not null,
@@ -60,7 +60,7 @@ alter table if exists public.home_sections add column if not exists created_at t
 
 -- 4. COUPONS / PROMOTIONS
 create table if not exists public.coupons (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   code text unique not null,
   description text,
   discount_type text not null,

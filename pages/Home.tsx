@@ -1,166 +1,154 @@
+
 import React from 'react';
-import { Product } from '../types';
-import { PRODUCTS, CATEGORIES } from '../data/products';
+import { Product, Category } from '../types';
+import { PRODUCTS, CATEGORIES as FALLBACK_CATEGORIES } from '../data/products';
 import ProductCard from '../components/ProductCard';
-import { ArrowRight, Star } from 'lucide-react';
+import { ArrowRight, Star, Loader2 } from 'lucide-react';
+import { useHomeSections } from '../hooks/useHomeSections';
+import { useCategories } from '../hooks/useCategories';
 
 interface HomeProps {
-  products?: Product[];
-  onProductClick: (product: Product) => void;
-  onCategoryClick: (categoryId: string) => void;
+    products?: Product[];
+    onProductClick: (product: Product) => void;
+    onCategoryClick: (categoryId: string) => void;
 }
 
 const Home: React.FC<HomeProps> = ({ products = PRODUCTS, onProductClick, onCategoryClick }) => {
-  return (
-    <div className="pb-12">
-      {/* Main Hero Banner - Responsive */}
-      <section className="relative w-full cursor-pointer group overflow-hidden">
-        {/* Mobile Image */}
-        <img 
-          src="https://cdn.shopify.com/s/files/1/0809/1274/4673/files/heronew.png?v=1770054480" 
-          alt="Nova Coleção Ibiza" 
-          className="w-full h-auto object-cover md:hidden min-h-[500px]"
-          onClick={() => {
-             const kit = products.find(p => p.isKit);
-             if (kit) onProductClick(kit);
-          }}
-        />
-        
-        {/* Desktop Image - High Quality */}
-        <img 
-          src="https://cdn.shopify.com/s/files/1/0773/0148/1696/files/bannerdesktopibiza-698133c8acf7c.webp?v=1770075089" 
-          alt="Nova Coleção Ibiza Desktop" 
-          className="hidden md:block w-full h-auto object-cover"
-          onClick={() => {
-             const kit = products.find(p => p.isKit);
-             if (kit) onProductClick(kit);
-          }}
-        />
+    const { sections, loading: sectionsLoading } = useHomeSections();
+    const { categories: apiCategories, loading: catsLoading } = useCategories();
 
-        {/* Text Overlay - Restored */}
-        <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/60 via-black/20 to-transparent pointer-events-none flex items-end md:items-center pb-12 md:pb-0">
-            <div className="container mx-auto px-4 md:px-8">
-                <div className="max-w-lg text-white md:pl-12 pointer-events-auto animate-in slide-in-from-left-10 duration-700">
-                    <span className="bg-rose-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-4 inline-block shadow-lg">
-                        Lançamento 2026
-                    </span>
-                    <h1 className="text-5xl md:text-7xl font-serif mb-4 leading-tight drop-shadow-lg">
-                        Coleção <br/><span className="italic font-light text-rose-200">Ibiza</span>
-                    </h1>
-                    <p className="text-gray-100 text-sm md:text-lg mb-8 max-w-sm leading-relaxed drop-shadow-md">
-                        A elegância do linho com o conforto do algodão. Peças que não amassam para você brilhar.
-                    </p>
-                    <button 
-                        className="bg-white text-gray-900 font-bold py-3 px-8 rounded-full hover:bg-rose-50 transition-colors inline-flex items-center gap-2 shadow-xl"
-                        onClick={() => {
-                            const kit = products.find(p => p.isKit);
-                            if (kit) onProductClick(kit);
-                        }}
-                    >
-                        VER COLEÇÃO <ArrowRight size={18} />
-                    </button>
-                </div>
-            </div>
-        </div>
-      </section>
+    const categories = apiCategories.length > 0 ? apiCategories : FALLBACK_CATEGORIES.map(c => ({
+        id: c.id,
+        name: c.name,
+        slug: c.id,
+        imageUrl: c.image,
+        active: true,
+        orderPosition: 0
+    }));
 
-      {/* Categories Strip */}
-      <section className="py-10 px-4">
-        <div className="max-w-7xl mx-auto">
-            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="w-1 h-6 bg-rose-400 rounded-full"></span>
-                Navegue por Categoria
-            </h2>
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                {CATEGORIES.map(cat => (
-                    <div 
-                        key={cat.id} 
-                        onClick={() => onCategoryClick(cat.id)}
-                        className="flex-shrink-0 w-28 md:w-40 flex flex-col items-center gap-3 group cursor-pointer"
-                    >
-                        <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-transparent group-hover:border-rose-300 transition-all shadow-md">
-                            <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        </div>
-                        <span className="text-sm font-medium text-gray-700 group-hover:text-rose-600 text-center">{cat.name}</span>
+    if (sectionsLoading || catsLoading) {
+        return <div className="h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-rose-500" /></div>;
+    }
+
+    return (
+        <div className="pb-12">
+            {/* Dynamic Sections from Backend */}
+            {sections.length > 0 ? (
+                sections.map((section) => (
+                    <div key={section.id}>
+                        {section.section_type === 'banner' && (
+                            <section
+                                className="relative w-full cursor-pointer group overflow-hidden"
+                                onClick={() => {
+                                    if (section.data.link) {
+                                        // Logic to handle link navigation could be passed as prop if needed
+                                        // For now, if it's a product handle, we could find it
+                                        if (section.data.link.includes('/product/')) {
+                                            const handle = section.data.link.split('/product/')[1];
+                                            const p = products.find(p => p.handle === handle);
+                                            if (p) onProductClick(p);
+                                        } else if (section.data.link.includes('/category/')) {
+                                            const catId = section.data.link.split('/category/')[1];
+                                            onCategoryClick(catId);
+                                        }
+                                    }
+                                }}
+                            >
+                                <img
+                                    src={section.data.image_mobile || section.data.image}
+                                    alt={section.title}
+                                    className="w-full h-auto object-cover md:hidden min-h-[500px]"
+                                />
+                                <img
+                                    src={section.data.image_desktop || section.data.image}
+                                    alt={section.title}
+                                    className="hidden md:block w-full h-auto object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/60 via-black/20 to-transparent flex items-end md:items-center pb-12 md:pb-0">
+                                    <div className="container mx-auto px-4 md:px-8">
+                                        <div className="max-w-lg text-white md:pl-12">
+                                            <h1 className="text-5xl md:text-7xl font-serif mb-4 leading-tight">{section.title}</h1>
+                                            <p className="text-gray-100 text-sm md:text-lg mb-8 max-w-sm">{section.description || section.data.description}</p>
+                                            {section.data.button_text && (
+                                                <button className="bg-white text-gray-900 font-bold py-3 px-8 rounded-full flex items-center gap-2">
+                                                    {section.data.button_text} <ArrowRight size={18} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        )}
+
+                        {section.section_type === 'grid' && (
+                            <section className="py-12 px-4 max-w-7xl mx-auto">
+                                <h2 className="text-2xl font-bold text-gray-900 mb-8">{section.title}</h2>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {products
+                                        .filter(p => !section.data.category || p.category === section.data.category || p.categoryId === section.data.category)
+                                        .slice(0, section.data.limit || 4)
+                                        .map(product => (
+                                            <ProductCard key={product.id} product={product} onClick={onProductClick} />
+                                        ))}
+                                </div>
+                            </section>
+                        )}
                     </div>
-                ))}
-            </div>
+                ))
+            ) : (
+                /* Fallback Static Content (Original Layout) */
+                <>
+                    <section className="relative w-full cursor-pointer group overflow-hidden">
+                        <img src="https://cdn.shopify.com/s/files/1/0809/1274/4673/files/heronew.png?v=1770054480" className="w-full h-auto object-cover md:hidden min-h-[500px]" onClick={() => onProductClick(products[0])} />
+                        <img src="https://cdn.shopify.com/s/files/1/0773/0148/1696/files/bannerdesktopibiza-698133c8acf7c.webp?v=1770075089" className="hidden md:block w-full h-auto object-cover" onClick={() => onProductClick(products[0])} />
+                    </section>
+
+                    <section className="py-10 px-4">
+                        <div className="max-w-7xl mx-auto">
+                            <h2 className="text-xl font-bold text-gray-900 mb-6">Categorias</h2>
+                            <div className="flex gap-4 overflow-x-auto pb-4">
+                                {categories.map(cat => (
+                                    <div key={cat.id} onClick={() => onCategoryClick(cat.id)} className="flex-shrink-0 w-28 md:w-40 cursor-pointer">
+                                        <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden border shadow-sm">
+                                            <img src={cat.imageUrl} alt={cat.name} className="w-full h-full object-cover" />
+                                        </div>
+                                        <p className="text-center mt-2 text-sm font-medium">{cat.name}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="py-12 px-4 max-w-7xl mx-auto">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-8">Destaques</h2>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8">
+                            {products.slice(0, 8).map(product => (
+                                <ProductCard key={product.id} product={product} onClick={onProductClick} />
+                            ))}
+                        </div>
+                    </section>
+                </>
+            )}
+
+            {/* Trust Banner - Static */}
+            <section className="bg-gray-900 text-white py-12 px-4 mt-8">
+                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                    <div>
+                        <h3 className="font-bold text-lg mb-2">Loja Física</h3>
+                        <p className="text-sm text-gray-400">Compre com segurança.</p>
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-lg mb-2">Envio Rápido</h3>
+                        <p className="text-sm text-gray-400">Postagem em 24h.</p>
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-lg mb-2">Troca Fácil</h3>
+                        <p className="text-sm text-gray-400">Primeira troca grátis.</p>
+                    </div>
+                </div>
+            </section>
         </div>
-      </section>
-
-      {/* Highlight Product (The Kit) */}
-      <section className="py-12 bg-rose-50/50 border-y border-rose-100">
-         <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
-            <div 
-                className="relative aspect-square md:aspect-[4/3] rounded-2xl overflow-hidden shadow-xl cursor-pointer"
-                onClick={() => {
-                    const kit = products.find(p => p.isKit);
-                    if (kit) onProductClick(kit);
-                }}
-            >
-                 <img src="https://cdn.shopify.com/s/files/1/0773/0148/1696/files/kitfavorito-698145394d8e9.webp?v=1770079574" alt="Kit Camisas" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
-                 <div className="absolute top-4 left-4 bg-white/90 backdrop-blur text-gray-900 font-bold px-3 py-1 rounded-lg text-xs shadow-sm flex items-center gap-1">
-                    <Star size={12} className="text-yellow-500 fill-yellow-500" /> Mais Vendido
-                 </div>
-            </div>
-            <div className="md:pl-8">
-                <h2 className="text-3xl font-serif text-gray-900 mb-4">O Kit Queridinho do Brasil</h2>
-                <p className="text-gray-600 mb-6 leading-relaxed">
-                    Mais de 15.000 unidades vendidas. O Kit de Camisas Ibiza une versatilidade e economia. Leve 3 peças pagando preço de atacado.
-                </p>
-                <ul className="space-y-2 mb-8 text-sm text-gray-700">
-                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Tecido que não amassa</li>
-                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Modelagem que não marca</li>
-                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Frete Grátis hoje</li>
-                </ul>
-                <button 
-                    onClick={() => {
-                        const kit = products.find(p => p.isKit);
-                        if (kit) onProductClick(kit);
-                    }}
-                    className="bg-green-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-green-700 transition-all w-full md:w-auto"
-                >
-                    COMPRAR AGORA
-                </button>
-            </div>
-         </div>
-      </section>
-
-      {/* Product Grid - "Liquidação" */}
-      <section className="py-12 px-4 max-w-7xl mx-auto">
-         <div className="flex justify-between items-end mb-8">
-             <div>
-                <span className="text-rose-500 text-xs font-bold uppercase tracking-widest">Ofertas Relâmpago</span>
-                <h2 className="text-2xl font-bold text-gray-900 mt-1">Liquidação de Verão</h2>
-             </div>
-         </div>
-         
-         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8">
-            {products.filter(p => !p.isKit).map(product => (
-                <ProductCard key={product.id} product={product} onClick={onProductClick} />
-            ))}
-         </div>
-      </section>
-
-      {/* Trust Banner */}
-      <section className="bg-gray-900 text-white py-12 px-4 mt-8">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-              <div className="p-4 border border-white/10 rounded-xl">
-                  <h3 className="font-bold text-lg mb-2">Loja Física em RS</h3>
-                  <p className="text-sm text-gray-400">Compre com quem tem endereço e história.</p>
-              </div>
-              <div className="p-4 border border-white/10 rounded-xl">
-                  <h3 className="font-bold text-lg mb-2">Envio Rápido</h3>
-                  <p className="text-sm text-gray-400">Postagem em até 24h úteis.</p>
-              </div>
-              <div className="p-4 border border-white/10 rounded-xl">
-                  <h3 className="font-bold text-lg mb-2">Troca Grátis</h3>
-                  <p className="text-sm text-gray-400">Não serviu? A primeira troca é por nossa conta.</p>
-              </div>
-          </div>
-      </section>
-    </div>
-  );
+    );
 };
 
 export default Home;

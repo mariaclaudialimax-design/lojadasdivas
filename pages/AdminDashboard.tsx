@@ -7,6 +7,7 @@ import AdminPagesPage from './AdminPagesPage';
 import AdminOrdersPage from './AdminOrdersPage';
 import AdminInventoryPage from './AdminInventoryPage';
 import AdminCouponsPage from './AdminCouponsPage';
+import AdminHomePage from './AdminHomePage';
 
 interface AdminDashboardProps {
   onNavigateHome: () => void;
@@ -150,12 +151,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateHome }) => {
         )}
 
         {currentView === 'home' && (
-          <div className="p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Home (CMS)</h2>
-            <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-              Módulo de home em desenvolvimento...
-            </div>
-          </div>
+          <AdminHomePage />
         )}
 
         {currentView === 'orders' && (

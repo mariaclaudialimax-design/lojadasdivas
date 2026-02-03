@@ -117,12 +117,11 @@ export default function AdminProductsPage({ onNavigateHome }: AdminProductsPageP
             { name: 'handle', label: 'Handle (URL)', type: 'text', required: true },
             { name: 'description', label: 'Descrição', type: 'textarea' },
             { name: 'price', label: 'Preço', type: 'number', required: true },
+            { name: 'compare_at_price', label: 'Preço Original (De)', type: 'number' },
             { name: 'stock', label: 'Estoque', type: 'number' },
-            {
-              name: 'active',
-              label: 'Ativo',
-              type: 'checkbox',
-            },
+            { name: 'installments', label: 'Parcelamento (ex: 12x de...)', type: 'text' },
+            { name: 'is_kit', label: 'É um Kit?', type: 'checkbox' },
+            { name: 'active', label: 'Ativo', type: 'checkbox' },
           ]}
           initialData={editingProduct || {}}
           onSubmit={handleCreateOrUpdate}
