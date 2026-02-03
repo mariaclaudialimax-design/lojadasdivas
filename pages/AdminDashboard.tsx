@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, LayoutGrid, Package, Layers, FileText, Home, Settings, Barcode, Tag } from 'lucide-react';
+import { LogOut, LayoutGrid, Package, Layers, FileText, Home, Settings, Barcode, Tag, UserPlus } from 'lucide-react';
 import AdminProductsPage from './AdminProductsPage';
 import AdminCategoriesPage from './AdminCategoriesPage';
 import AdminPagesPage from './AdminPagesPage';
@@ -60,11 +60,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateHome }) => {
               <button
                 key={item.id}
                 onClick={() => setCurrentView(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-left text-sm font-medium ${
-                  isActive
-                    ? 'bg-rose-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition text-left text-sm font-medium ${isActive
+                  ? 'bg-rose-600 text-white'
+                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  }`}
               >
                 <item.icon className="w-5 h-5" />
                 <span>{item.label}</span>

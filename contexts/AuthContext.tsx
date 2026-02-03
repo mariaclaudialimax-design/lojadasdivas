@@ -45,7 +45,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ email, password })
       });
 
-      const data = await response.json();
+      // Some error responses from local functions may be empty or plain text.
+      // Read as text first and try to parse JSON to avoid `Unexpected end of JSON input`.
+      const text = await response.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (e) {
+        data = { error: text || 'Invalid response from auth server' };
+      }
 
       if (!response.ok || data.error) {
         return { success: false, error: data.error || 'Login failed' };

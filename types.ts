@@ -1,8 +1,20 @@
 
 export type Size = 'PPP' | 'PP' | 'P' | 'M' | 'G' | 'GG' | '3G' | '4G' | '5G';
-export type PageView = 'home' | 'product' | 'category' | 'info' | 'thank_you' | 'admin' | 'admin_login';
-export type InfoPageType = 'sobre' | 'trocas' | 'politica' | 'termos' | 'faq';
-export type AdminView = 'login' | 'dashboard' | 'products' | 'categories' | 'home' | 'pages' | 'orders' | 'settings';
+export type PageView = 'home' | 'product' | 'category' | 'info' | 'thank_you' | 'admin' | 'signup';
+export type InfoPageType =
+  | 'trust'
+  | 'about'
+  | 'exchanges'
+  | 'tracking'
+  | 'privacy'
+  | 'shipping'
+  | 'refund'
+  | 'legal'
+  | 'terms'
+  | 'contact'
+  | 'sobre' | 'trocas' | 'politica' | 'faq'; // Keeping old ones for compatibility
+
+export type AdminView = 'login' | 'dashboard' | 'products' | 'categories' | 'home' | 'pages' | 'orders' | 'inventory' | 'coupons' | 'settings' | 'signup';
 
 export interface ColorOption {
   id: string;
@@ -113,47 +125,15 @@ export interface ShippingOption {
   logo: string;
 }
 
-// Added 'admin' to page views
-export type PageView = 'home' | 'product' | 'category' | 'info' | 'thank_you' | 'admin';
-
-// Admin Sub-views
-export type AdminView = 'login' | 'dashboard' | 'products' | 'cms' | 'orders';
-
-export type InfoPageType = 
-  | 'trust' 
-  | 'about' 
-  | 'exchanges' 
-  | 'tracking' 
-  | 'privacy' 
-  | 'shipping' 
-  | 'refund' 
-  | 'legal' 
-  | 'terms' 
-  | 'contact';
-
 export type LegalPage = 'tracking' | 'returns' | 'privacy' | 'terms';
 
-// --- NEW TYPES FOR BACKEND & TRACKING ---
-
-export interface Order {
-    id: string;
-    externalId?: string;
-    customer: string;
-    email?: string;
-    total: number;
-    status: 'paid' | 'pending' | 'shipped';
-    date: string;
-    items?: any[];
-    trackingCode?: string;
-}
-
 export interface TrackingEvent {
-    eventName: 'ViewContent' | 'AddToCart' | 'InitiateCheckout' | 'Purchase';
-    eventId?: string; // Critical for deduplication
-    products?: Product[];
-    value?: number;
-    currency?: string;
-    contentIds?: string[];
+  eventName: 'ViewContent' | 'AddToCart' | 'InitiateCheckout' | 'Purchase';
+  eventId?: string; // Critical for deduplication
+  products?: Product[];
+  value?: number;
+  currency?: string;
+  contentIds?: string[];
 }
 
 // Global Declaration

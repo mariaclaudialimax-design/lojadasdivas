@@ -18,7 +18,7 @@ import { Size, LegalPage, PageView, Product, InfoPageType, CartItem } from './ty
 import { PRODUCTS, CATEGORIES } from './data/products';
 import { useProducts } from './hooks/useProducts';
 import ProductCard from './components/ProductCard';
-import { AVAILABLE_COLORS } from './constants'; 
+import { AVAILABLE_COLORS } from './constants';
 
 // Lazy Load Non-Critical Components
 const CartDrawer = React.lazy(() => import('./components/CartDrawer'));
@@ -28,79 +28,83 @@ const ThankYouPage = React.lazy(() => import('./components/ThankYouPage'));
 const Admin = React.lazy(() => import('./pages/Admin'));
 const AdminLogin = React.lazy(() => import('./pages/AdminLogin'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const AdminSignupPage = React.lazy(() => import('./pages/AdminSignupPage'));
 
 // --- ROUTING HELPER FUNCTION ---
 // Extracts state from URL synchronously to avoid "flashing" on load
 const getInitialStateFromUrl = (products: Product[] = PRODUCTS) => {
-    let path = window.location.pathname;
-    
-    // Normalize path: remove trailing slash if not root
-    if (path.length > 1 && path.endsWith('/')) {
-        path = path.slice(0, -1);
-    }
+  let path = window.location.pathname;
 
-    // Default State
-    let state = {
-        page: 'home' as PageView,
-        product: null as Product | null,
-        category: null as string | null,
-        infoPage: null as InfoPageType | null
-    };
+  // Normalize path: remove trailing slash if not root
+  if (path.length > 1 && path.endsWith('/')) {
+    path = path.slice(0, -1);
+  }
 
-    if (path === '/' || path === '' || path === '/index.html') {
-        return state;
-    } 
-    else if (path.startsWith('/product/')) {
-        const handle = path.split('/product/')[1];
-        const product = products.find(p => p.handle === handle);
-        if (product) {
-            state.page = 'product';
-            state.product = product;
-        } else {
-            // 404 -> Home (will replace history later if needed, but for render, show home)
-            state.page = 'home';
-        }
-    } 
-    else if (path.startsWith('/category/')) {
-        const catId = path.split('/category/')[1];
-        const category = CATEGORIES.find(c => c.id === catId);
-        if (category) {
-            state.page = 'category';
-            state.category = catId;
-        }
-    } 
-    else if (path.startsWith('/pages/')) {
-        const pageType = path.split('/pages/')[1] as InfoPageType;
-        if (pageType) {
-            state.page = 'info';
-            state.infoPage = pageType;
-        }
-    }
-    else if (path === '/obrigada') {
-        state.page = 'thank_you';
-    }
-    else if (path === '/admin') {
-        state.page = 'admin';
-    }
+  // Default State
+  let state = {
+    page: 'home' as PageView,
+    product: null as Product | null,
+    category: null as string | null,
+    infoPage: null as InfoPageType | null
+  };
 
+  if (path === '/' || path === '' || path === '/index.html') {
     return state;
+  }
+  else if (path.startsWith('/product/')) {
+    const handle = path.split('/product/')[1];
+    const product = products.find(p => p.handle === handle);
+    if (product) {
+      state.page = 'product';
+      state.product = product;
+    } else {
+      // 404 -> Home (will replace history later if needed, but for render, show home)
+      state.page = 'home';
+    }
+  }
+  else if (path.startsWith('/category/')) {
+    const catId = path.split('/category/')[1];
+    const category = CATEGORIES.find(c => c.id === catId);
+    if (category) {
+      state.page = 'category';
+      state.category = catId;
+    }
+  }
+  else if (path.startsWith('/pages/')) {
+    const pageType = path.split('/pages/')[1] as InfoPageType;
+    if (pageType) {
+      state.page = 'info';
+      state.infoPage = pageType;
+    }
+  }
+  else if (path === '/obrigada') {
+    state.page = 'thank_you';
+  }
+  else if (path === '/admin') {
+    state.page = 'admin';
+  }
+  else if (path === '/cadastro') {
+    state.page = 'signup';
+  }
+
+  return state;
 };
 
 const App: React.FC = () => {
   const selectorRef = useRef<HTMLDivElement>(null);
-  
+
   // --- FETCH PRODUCTS FROM API ---
   const { products: apiProducts, loading: productsLoading, error: productsError } = useProducts();
-  
+
   // --- STATE MANAGEMENT ---
 
   // Cart State with LocalStorage Persistence
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     try {
-        const saved = localStorage.getItem('cart_items');
-        return saved ? JSON.parse(saved) : [];
+      const saved = localStorage.getItem('cart_items');
+      return saved ? JSON.parse(saved) : [];
     } catch (e) {
-        return [];
+      return [];
     }
   });
 
@@ -124,17 +128,17 @@ const App: React.FC = () => {
 
   // Update state based on URL (for PopState/Back button)
   const updateStateFromUrl = () => {
-      const newState = getInitialStateFromUrl(apiProducts.length > 0 ? apiProducts : PRODUCTS);
-      setCurrentPage(newState.page);
-      setCurrentProduct(newState.product);
-      setCurrentCategory(newState.category);
-      setCurrentInfoPage(newState.infoPage);
+    const newState = getInitialStateFromUrl(apiProducts.length > 0 ? apiProducts : PRODUCTS);
+    setCurrentPage(newState.page);
+    setCurrentProduct(newState.product);
+    setCurrentCategory(newState.category);
+    setCurrentInfoPage(newState.infoPage);
   };
 
   // Handle Browser Back/Forward buttons
   useEffect(() => {
     const handlePopState = () => {
-        updateStateFromUrl();
+      updateStateFromUrl();
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -143,9 +147,9 @@ const App: React.FC = () => {
   // --- NAVIGATION HELPER ---
   const navigateTo = (url: string) => {
     if (window.location.pathname !== url) {
-        window.history.pushState({}, '', url);
-        updateStateFromUrl();
-        window.scrollTo({ top: 0, behavior: 'instant' });
+      window.history.pushState({}, '', url);
+      updateStateFromUrl();
+      window.scrollTo({ top: 0, behavior: 'instant' });
     }
   };
 
@@ -163,55 +167,49 @@ const App: React.FC = () => {
   };
 
   const handleNavigateInfo = (page: InfoPageType) => {
-      navigateTo(`/pages/${page}`);
+    navigateTo(`/pages/${page}`);
   };
 
   const handleNavigateThankYou = () => {
-      navigateTo('/obrigada');
+    navigateTo('/obrigada');
   };
 
   const handleNavigateAdmin = () => {
-      navigateTo('/admin');
+    navigateTo('/admin');
   };
 
   // Bridge for Header's "LegalPage" type to our new "InfoPageType"
   const handleHeaderLegalClick = (page: LegalPage) => {
-      if (page === 'tracking') handleNavigateInfo('tracking');
-      else if (page === 'returns') handleNavigateInfo('exchanges');
-      else if (page === 'privacy') handleNavigateInfo('privacy');
-      else if (page === 'terms') handleNavigateInfo('terms');
+    if (page === 'tracking') handleNavigateInfo('tracking');
+    else if (page === 'returns') handleNavigateInfo('exchanges');
+    else if (page === 'privacy') handleNavigateInfo('privacy');
+    else if (page === 'terms') handleNavigateInfo('terms');
   };
 
   const handleAddToCart = (size: Size, colors?: string[]) => {
-      if (!currentProduct) return;
+    if (!currentProduct) return;
 
-      // LÓGICA DE SUBSTITUIÇÃO:
-      // Removemos qualquer item anterior e deixamos apenas o novo item no carrinho.
-      // Isso evita conflitos de checkout com múltiplos produtos.
-      
-      const newItem: CartItem = {
-          product: currentProduct,
-          size,
-          colors,
-          quantity: 1
-      };
+    // LÓGICA DE SUBSTITUIÇÃO:
+    // Removemos qualquer item anterior e deixamos apenas o novo item no carrinho.
+    // Isso evita conflitos de checkout com múltiplos produtos.
 
-      setCartItems([newItem]); // Substitui o array inteiro pelo novo item
-      setIsCartOpen(true);
+    const newItem: CartItem = {
+      product: currentProduct,
+      size,
+      colors,
+      quantity: 1
+    };
+
+    setCartItems([newItem]); // Substitui o array inteiro pelo novo item
+    setIsCartOpen(true);
   };
 
   const handleRemoveFromCart = (index: number) => {
-      setCartItems(prev => prev.filter((_, i) => i !== index));
+    setCartItems(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Render Admin separately to avoid layout wrapping
-  if (currentPage === 'admin') {
-      return (
-          <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
-              <Admin onNavigateHome={handleNavigateHome} />
-          </Suspense>
-      );
-  }
+  // NOTE: Admin route is handled later by `AdminRouting` so it goes through
+  // the `AuthProvider` -> `AdminLogin` -> `AdminDashboard` flow.
 
   return (
     <AdminRouting
@@ -285,30 +283,39 @@ const AdminRouting: React.FC<AdminRoutingProps> = (props) => {
     );
   }
 
+  // Public Signup Route
+  if (props.currentPage === 'signup') {
+    return (
+      <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin" /></div>}>
+        <AdminSignupPage />
+      </Suspense>
+    );
+  }
+
   // Store Routes (with footer/header)
   return (
     <div className="min-h-screen bg-[#FFFBFB] text-gray-900 font-sans pb-20 md:pb-0 selection:bg-rose-200 selection:text-rose-900 overflow-x-hidden w-full">
-      
+
       {/* Search Overlay (Lazy) */}
       <Suspense fallback={null}>
         {props.isSearchOpen && (
-            <SearchOverlay 
-                isOpen={props.isSearchOpen}
-                onClose={() => props.setIsSearchOpen(false)}
-                onProductClick={props.handleProductClick}
-            />
+          <SearchOverlay
+            isOpen={props.isSearchOpen}
+            onClose={() => props.setIsSearchOpen(false)}
+            onProductClick={props.handleProductClick}
+          />
         )}
       </Suspense>
 
       {/* Cart Drawer (Lazy) */}
       <Suspense fallback={null}>
         {props.isCartOpen && (
-            <CartDrawer 
-                isOpen={props.isCartOpen} 
-                onClose={() => props.setIsCartOpen(false)} 
-                cartItems={props.cartItems} 
-                onRemoveItem={props.handleRemoveFromCart}
-            />
+          <CartDrawer
+            isOpen={props.isCartOpen}
+            onClose={() => props.setIsCartOpen(false)}
+            cartItems={props.cartItems}
+            onRemoveItem={props.handleRemoveFromCart}
+          />
         )}
       </Suspense>
 
@@ -321,9 +328,9 @@ const AdminRouting: React.FC<AdminRoutingProps> = (props) => {
       </div>
 
       {/* Header with Navigation */}
-      <Header 
-        onOpenLegal={props.handleHeaderLegalClick} 
-        onNavigateHome={props.handleNavigateHome} 
+      <Header
+        onOpenLegal={props.handleHeaderLegalClick}
+        onNavigateHome={props.handleNavigateHome}
         onNavigateCategory={props.handleCategoryClick}
         cartCount={props.cartItems.length}
         onOpenCart={() => props.setIsCartOpen(true)}
@@ -337,139 +344,139 @@ const AdminRouting: React.FC<AdminRoutingProps> = (props) => {
 
       {/* === INFO / LEGAL PAGES === */}
       {props.currentPage === 'info' && props.currentInfoPage && (
-          <div className="min-h-[60vh]">
-             <div className="max-w-4xl mx-auto px-4 pt-8">
-                <button onClick={props.handleNavigateHome} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1 mb-4">
-                    <ChevronLeft size={16} /> Voltar para Loja
-                </button>
-             </div>
-             <Suspense fallback={<div className="flex justify-center p-12"><Loader2 className="animate-spin text-gray-400"/></div>}>
-                <InfoPage type={props.currentInfoPage} />
-             </Suspense>
+        <div className="min-h-[60vh]">
+          <div className="max-w-4xl mx-auto px-4 pt-8">
+            <button onClick={props.handleNavigateHome} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1 mb-4">
+              <ChevronLeft size={16} /> Voltar para Loja
+            </button>
           </div>
+          <Suspense fallback={<div className="flex justify-center p-12"><Loader2 className="animate-spin text-gray-400" /></div>}>
+            <InfoPage type={props.currentInfoPage} />
+          </Suspense>
+        </div>
       )}
 
       {/* === THANK YOU PAGE === */}
       {props.currentPage === 'thank_you' && (
-          <Suspense fallback={<div className="flex justify-center p-12"><Loader2 className="animate-spin text-gray-400"/></div>}>
-            <ThankYouPage onNavigateHome={props.handleNavigateHome} />
-          </Suspense>
+        <Suspense fallback={<div className="flex justify-center p-12"><Loader2 className="animate-spin text-gray-400" /></div>}>
+          <ThankYouPage onNavigateHome={props.handleNavigateHome} />
+        </Suspense>
       )}
 
       {/* === CATEGORY PAGE === */}
       {props.currentPage === 'category' && props.currentCategory && (
-         <div className="max-w-7xl mx-auto px-4 py-8 min-h-[60vh] animate-in fade-in slide-in-from-bottom-2">
-            <div className="mb-6">
-                 <button onClick={props.handleNavigateHome} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1 mb-4">
-                    <ChevronLeft size={16} /> Voltar para Loja
-                </button>
-                <h1 className="text-3xl font-serif text-gray-900">
-                    {CATEGORIES.find(c => c.id === props.currentCategory)?.name}
-                </h1>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8">
-                {props.apiProducts.filter(p => {
-                    if (props.currentCategory === 'kits') return p.isKit;
-                    if (props.currentCategory === 'conjuntos') return p.category === 'Conjuntos';
-                    if (props.currentCategory === 'vestidos') return p.category === 'Vestidos';
-                    return false;
-                }).map(product => (
-                    <ProductCard key={product.id} product={product} onClick={props.handleProductClick} />
-                ))}
-            </div>
-            
+        <div className="max-w-7xl mx-auto px-4 py-8 min-h-[60vh] animate-in fade-in slide-in-from-bottom-2">
+          <div className="mb-6">
+            <button onClick={props.handleNavigateHome} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1 mb-4">
+              <ChevronLeft size={16} /> Voltar para Loja
+            </button>
+            <h1 className="text-3xl font-serif text-gray-900">
+              {CATEGORIES.find(c => c.id === props.currentCategory)?.name}
+            </h1>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-8">
             {props.apiProducts.filter(p => {
-                 if (props.currentCategory === 'kits') return p.isKit;
-                 if (props.currentCategory === 'conjuntos') return p.category === 'Conjuntos';
-                 if (props.currentCategory === 'vestidos') return p.category === 'Vestidos';
-                 return false;
-            }).length === 0 && (
-                <div className="text-center py-20 text-gray-500">
-                    Nenhum produto encontrado nesta categoria no momento.
-                </div>
+              if (props.currentCategory === 'kits') return p.isKit;
+              if (props.currentCategory === 'conjuntos') return p.category === 'Conjuntos';
+              if (props.currentCategory === 'vestidos') return p.category === 'Vestidos';
+              return false;
+            }).map(product => (
+              <ProductCard key={product.id} product={product} onClick={props.handleProductClick} />
+            ))}
+          </div>
+
+          {props.apiProducts.filter(p => {
+            if (props.currentCategory === 'kits') return p.isKit;
+            if (props.currentCategory === 'conjuntos') return p.category === 'Conjuntos';
+            if (props.currentCategory === 'vestidos') return p.category === 'Vestidos';
+            return false;
+          }).length === 0 && (
+              <div className="text-center py-20 text-gray-500">
+                Nenhum produto encontrado nesta categoria no momento.
+              </div>
             )}
-         </div>
+        </div>
       )}
 
       {/* === PRODUCT PAGE === */}
       {props.currentPage === 'product' && props.currentProduct && (
         <div className="animate-in fade-in duration-300">
-            {/* Breadcrumb / Back */}
-            <div className="px-4 py-4 max-w-7xl mx-auto">
-                <button onClick={props.handleNavigateHome} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1">
-                    <ChevronLeft size={16} /> Voltar para Loja
-                </button>
+          {/* Breadcrumb / Back */}
+          <div className="px-4 py-4 max-w-7xl mx-auto">
+            <button onClick={props.handleNavigateHome} className="text-sm text-gray-500 hover:text-gray-900 flex items-center gap-1">
+              <ChevronLeft size={16} /> Voltar para Loja
+            </button>
+          </div>
+
+          {/* PRODUCT LAYOUT CONTAINER */}
+          <div className="max-w-7xl mx-auto px-4 py-4 grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-start">
+
+            {/* LEFT COLUMN: IMAGES */}
+            <div className="md:col-span-7 w-full flex flex-col items-center">
+              <ProductGallery images={props.currentProduct.images} title={props.currentProduct.title} />
+
+              {/* Benefits shown below image on desktop */}
+              <div className="hidden md:block mt-8 w-full">
+                <Benefits />
+              </div>
             </div>
 
-            {/* PRODUCT LAYOUT CONTAINER */}
-            <div className="max-w-7xl mx-auto px-4 py-4 grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 items-start">
-                
-                {/* LEFT COLUMN: IMAGES */}
-                <div className="md:col-span-7 w-full flex flex-col items-center">
-                    <ProductGallery images={props.currentProduct.images} title={props.currentProduct.title} />
-                    
-                    {/* Benefits shown below image on desktop */}
-                    <div className="hidden md:block mt-8 w-full">
-                        <Benefits />
-                    </div>
-                </div>
+            {/* RIGHT COLUMN: BUY BOX */}
+            <div className="md:col-span-5 w-full flex flex-col items-center">
+              {props.currentProduct.isKit ? (
+                <ProductSelector
+                  product={props.currentProduct}
+                  onSelectionComplete={() => { }}
+                  onAddToCart={props.handleAddToCart}
+                  id="main-selector"
+                />
+              ) : (
+                <StandardProductSelector
+                  product={props.currentProduct}
+                  onAddToCart={(size) => props.handleAddToCart(size)}
+                />
+              )}
 
-                {/* RIGHT COLUMN: BUY BOX */}
-                <div className="md:col-span-5 w-full flex flex-col items-center">
-                    {props.currentProduct.isKit ? (
-                        <ProductSelector 
-                            product={props.currentProduct}
-                            onSelectionComplete={() => {}} 
-                            onAddToCart={props.handleAddToCart}
-                            id="main-selector" 
-                        />
-                    ) : (
-                        <StandardProductSelector 
-                            product={props.currentProduct}
-                            onAddToCart={(size) => props.handleAddToCart(size)}
-                        />
-                    )}
-                    
-                    {/* Mobile Only Benefits position (Fixed Centering) */}
-                    <div className="md:hidden mt-8 w-full">
-                        <Benefits />
-                    </div>
-                </div>
+              {/* Mobile Only Benefits position (Fixed Centering) */}
+              <div className="md:hidden mt-8 w-full">
+                <Benefits />
+              </div>
             </div>
+          </div>
 
-            {/* SECTIONS BELOW FOLD */}
-            
-            <div className="mt-12 border-t border-gray-100 pt-12">
-                 <SocialProof product={props.currentProduct} /> 
-                 {props.currentProduct.isKit && <Usage />} 
+          {/* SECTIONS BELOW FOLD */}
+
+          <div className="mt-12 border-t border-gray-100 pt-12">
+            <SocialProof product={props.currentProduct} />
+            {props.currentProduct.isKit && <Usage />}
+          </div>
+
+          {/* Urgency Section (Common) */}
+          <section className="py-12 px-4 bg-white text-center border-t border-gray-100 mt-8">
+            <div className="max-w-md mx-auto">
+              <div className="w-16 h-1 bg-green-500 mx-auto mb-6 rounded-full"></div>
+              <h2 className="text-2xl font-serif text-gray-900 mb-3">Últimas peças do estoque</h2>
+              <p className="text-gray-500 mb-8 text-sm leading-relaxed">
+                Como nossa loja física tem muita saída, o estoque do site é compartilhado e pode acabar a qualquer momento.
+              </p>
             </div>
-            
-            {/* Urgency Section (Common) */}
-            <section className="py-12 px-4 bg-white text-center border-t border-gray-100 mt-8">
-                <div className="max-w-md mx-auto">
-                    <div className="w-16 h-1 bg-green-500 mx-auto mb-6 rounded-full"></div>
-                    <h2 className="text-2xl font-serif text-gray-900 mb-3">Últimas peças do estoque</h2>
-                    <p className="text-gray-500 mb-8 text-sm leading-relaxed">
-                        Como nossa loja física tem muita saída, o estoque do site é compartilhado e pode acabar a qualquer momento.
-                    </p>
-                </div>
-            </section>
-            
-            <FAQ />
+          </section>
 
-            {/* Related Products */}
-            <RelatedProducts 
-                currentProduct={props.currentProduct}
-                onProductClick={props.handleProductClick}
-            />
+          <FAQ />
+
+          {/* Related Products */}
+          <RelatedProducts
+            currentProduct={props.currentProduct}
+            onProductClick={props.handleProductClick}
+          />
         </div>
       )}
 
       {/* Footer */}
-      <Footer 
+      <Footer
         onNavigateInfo={props.handleNavigateInfo}
-        onNavigateAdmin={() => props.handleNavigateAdmin()} 
+        onNavigateAdmin={() => props.handleNavigateAdmin()}
       />
     </div>
   );

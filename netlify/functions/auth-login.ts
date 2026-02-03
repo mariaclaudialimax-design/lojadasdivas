@@ -34,11 +34,14 @@ export const handler = async (event: any) => {
       password
     });
 
+    // Debug logging: print sign-in result to help diagnose issues
+    console.log('signInWithPassword result:', { data, error });
+
     if (error) {
-      console.error('Auth error:', error.message);
+      console.error('Auth error:', error?.message || error);
       return {
         statusCode: 401,
-        body: JSON.stringify({ error: 'Invalid credentials' })
+        body: JSON.stringify({ error: 'Invalid credentials', details: error?.message || null })
       };
     }
 
@@ -55,6 +58,9 @@ export const handler = async (event: any) => {
       .select('id, role')
       .eq('id', data.user.id)
       .single();
+
+    // Log admin lookup result
+    console.log('admin_users lookup:', { adminUser, adminError });
 
     if (adminError || !adminUser) {
       return {
