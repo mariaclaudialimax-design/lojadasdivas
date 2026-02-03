@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, LayoutGrid, Package, Layers, FileText, Home, Settings } from 'lucide-react';
+import { LogOut, LayoutGrid, Package, Layers, FileText, Home, Settings, Barcode, Tag } from 'lucide-react';
 import AdminProductsPage from './AdminProductsPage';
 import AdminCategoriesPage from './AdminCategoriesPage';
 import AdminPagesPage from './AdminPagesPage';
 import AdminOrdersPage from './AdminOrdersPage';
+import AdminInventoryPage from './AdminInventoryPage';
+import AdminCouponsPage from './AdminCouponsPage';
 
 interface AdminDashboardProps {
   onNavigateHome: () => void;
 }
 
-type AdminView = 'dashboard' | 'products' | 'categories' | 'home' | 'pages' | 'orders' | 'settings';
+type AdminView = 'dashboard' | 'products' | 'categories' | 'home' | 'pages' | 'orders' | 'inventory' | 'coupons' | 'settings';
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateHome }) => {
   const { user, logout } = useAuth();
@@ -28,6 +30,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateHome }) => {
     { icon: Home, label: 'Home (CMS)', id: 'home' as const },
     { icon: FileText, label: 'Páginas', id: 'pages' as const },
     { icon: LayoutGrid, label: 'Pedidos', id: 'orders' as const },
+    { icon: Barcode, label: 'Inventário', id: 'inventory' as const },
+    { icon: Tag, label: 'Cupons', id: 'coupons' as const },
     { icon: Settings, label: 'Configurações', id: 'settings' as const }
   ];
 
@@ -166,6 +170,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateHome }) => {
               Módulo de configurações em desenvolvimento...
             </div>
           </div>
+        )}
+
+        {currentView === 'inventory' && (
+          <AdminInventoryPage onNavigateHome={onNavigateHome} />
+        )}
+
+        {currentView === 'coupons' && (
+          <AdminCouponsPage onNavigateHome={onNavigateHome} />
         )}
       </main>
     </div>
